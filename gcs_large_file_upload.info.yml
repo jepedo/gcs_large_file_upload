@@ -1,0 +1,10 @@
+name: GCS Large File Upload
+type: module
+description: 'A Drupal module for uploading files larger than 1GB to a public Google Cloud Storage bucket and triggering a Pub/Sub message upon completion.'
+core_version_requirement: ^10 || ^11
+package: Custom
+dependencies:
+  - drupal:file
+  - drupal:system
+  - google/cloud-storage
+  - google/cloud-pubsub
