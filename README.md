@@ -48,6 +48,18 @@ This Drupal module provides functionality for uploading files larger than a spec
 4. A Pub/Sub message will be sent to the configured topic (if provided).
 5. The file will be removed from the web server after successful upload to GCS.
 
+## File Upload Flowchart
+
+```mermaid
+graph TD
+  A[Upload File through Drupal Interface] --> B{File Size > Configured Limit?}
+  B -- Yes --> C[Upload File to GCS]
+  C --> D[Store GCS File URL in Custom Field]
+  D --> E[Send Pub/Sub Message]
+  E --> F[Remove File from Web Server]
+  B -- No --> G[Use Default Drupal File Upload Mechanism]
+```
+
 ## Code Overview
 
 ### GCSUploadSettingsForm
