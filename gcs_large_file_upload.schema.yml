@@ -1,0 +1,24 @@
+gcs_large_file_upload.settings:
+  type: config_object
+  label: 'GCS Large File Upload Settings'
+  mapping:
+    file_size_limit_mb:
+      type: integer
+      label: 'File size limit (MB)'
+    gcs_project_id:
+      type: string
+      label: 'GCS Project ID'
+    gcs_bucket_name:
+      type: string
+      label: 'GCS Bucket Name'
+    gcs_keyfile:
+      type: sequence
+      label: 'GCS Keyfile'
+      sequence:
+        - type: integer
+    pubsub_message:
+      type: string
+      label: 'Pub/Sub Message'
+    pubsub_topic:
+      type: string
+      label: 'Pub/Sub Topic'
