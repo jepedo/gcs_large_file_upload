@@ -1,12 +1,14 @@
 # GCS Large File Upload Module
 
-This Drupal module provides functionality for uploading files larger than default 5MB or specified size in module configuration to a public Google Cloud Storage (GCS) bucket. It also triggers a Pub/Sub message upon successful upload.
+This Drupal module provides functionality for uploading files larger than a specified size to a public Google Cloud Storage (GCS) bucket. It also triggers a Pub/Sub message upon successful upload and removes the file from the web server.
 
 ## Features
 
-- Upload files larger than default 5MB or configured size to GCS.
+- Upload files larger than a configurable size to GCS.
 - Authenticate with Google Cloud services using a service account keyfile.
 - Trigger a Pub/Sub message upon successful file upload.
+- Store the GCS file URL in a custom field on the file entity.
+- Remove the file from the web server after successful upload to GCS.
 - Hooks into Drupal's file system to handle file uploads.
 
 ## Requirements
@@ -42,7 +44,9 @@ This Drupal module provides functionality for uploading files larger than defaul
 
 1. Upload a file through any Drupal file upload interface.
 2. Files larger than the configured size limit (in MB) will be automatically uploaded to GCS.
-3. Upon successful upload, a Pub/Sub message will be sent to the configured topic (if provided).
+3. Upon successful upload, the GCS file URL will be stored in a custom field on the file entity.
+4. A Pub/Sub message will be sent to the configured topic (if provided).
+5. The file will be removed from the web server after successful upload to GCS.
 
 ## Code Overview
 
@@ -63,7 +67,7 @@ The `PubSubClient` class handles the interaction with Google Pub/Sub. It publish
 The main module file defines the following hooks:
 - `hook_help()`: Provides help text for the module.
 - `hook_form()`: Defines the form for uploading files to GCS.
-- `hook_file_insert()`: Handles file uploads and uploads files larger than the configured size limit to GCS.
+- `hook_file_insert()`: Handles file uploads and uploads files larger than the configured size limit to GCS. It also stores the GCS file URL in a custom field, sends a Pub/Sub message, and removes the file from the web server.
 
 ## Error Handling
 
