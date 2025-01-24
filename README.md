@@ -1,12 +1,10 @@
-# gcs_large_file_upload/gcs_large_file_upload/README.md
-
 # GCS Large File Upload Module
 
-This Drupal module provides functionality for uploading files larger than 5MB to a public Google Cloud Storage (GCS) bucket. It also triggers a Pub/Sub message upon successful upload.
+This Drupal module provides functionality for uploading files larger than default 5MB or specified size in module configuration to a public Google Cloud Storage (GCS) bucket. It also triggers a Pub/Sub message upon successful upload.
 
 ## Features
 
-- Upload files larger than 5MB to GCS.
+- Upload files larger than default 5MB or configured size to GCS.
 - Authenticate with Google Cloud services using a service account keyfile.
 - Trigger a Pub/Sub message upon successful file upload.
 - Hooks into Drupal's file system to handle file uploads.
