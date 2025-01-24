@@ -1,0 +1,8 @@
+services:
+  gcs_large_file_upload.gcs_client:
+    class: Drupal\gcs_large_file_upload\Service\GCSClient
+    arguments: ['%gcs_large_file_upload.bucket_name%', '%gcs_large_file_upload.project_id%', '%gcs_large_file_upload.keyfile_path%', '@logger.channel.default']
+
+  gcs_large_file_upload.pubsub_client:
+    class: Drupal\gcs_large_file_upload\Service\PubSubClient
+    arguments: ['%gcs_large_file_upload.project_id%', '%gcs_large_file_upload.keyfile_path%', '@logger.channel.default']

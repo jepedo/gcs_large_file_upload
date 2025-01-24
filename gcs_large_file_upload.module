@@ -1,0 +1,93 @@
+<?php
+
+/**
+ * @file
+ * Main module file for the GCS File Upload module.
+ */
+
+use Drupal\Core\Routing\RouteMatchInterface;
+use Drupal\file\Entity\FileInterface;
+use Psr\Log\LoggerInterface;
+use Symfony\Component\DependencyInjection\ContainerInterface;
+
+/**
+ * Implements hook_help().
+ *
+ * Provides help text for the module.
+ *
+ * @param string $route_name
+ *   The name of the current route.
+ * @param \Drupal\Core\Routing\RouteMatchInterface $route_match
+ *   The route match object.
+ */
+function gcs_file_upload_help($route_name, RouteMatchInterface $route_match) {
+  switch ($route_name) {
+    case 'help.page.gcs_file_upload':
+      return '<p>' . t('This module allows uploading files to Google Cloud Storage and triggers a Pub/Sub message upon completion.') . '</p>';
+  }
+}
+
+/**
+ * Implements hook_form().
+ *
+ * Defines the form for uploading files to GCS.
+ *
+ * @param array $form
+ *   An associative array containing the structure of the form.
+ * @param \Drupal\Core\Form\FormStateInterface $form_state
+ *   The current state of the form.
+ *
+ * @return array
+ *   The form structure.
+ */
+function gcs_file_upload_form($form, &$form_state) {
+  // Build the upload form using the GCS upload form service.
+  $form['upload'] = \Drupal::service('gcs_file_upload.gcs_upload_form')->buildForm([], $form_state);
+  return $form;
+}
+
+/**
+ * Implements hook_file_insert().
+ *
+ * Handles file uploads and uploads files larger than the configured size limit to GCS.
+ *
+ * @param \Drupal\file\FileInterface $file
+ *   The file entity.
+ */
+function gcs_file_upload_file_insert(FileInterface $file) {
+  $config = \Drupal::config('gcs_large_file_upload.settings');
+  $size_limit_mb = $config->get('file_size_limit_mb');
+  $size_limit_bytes = $size_limit_mb * 1024 * 1024;
+
+  // Check if the file size exceeds the configured limit.
+  if ($file->getSize() > $size_limit_bytes) {
+    $bucketName = $config->get('gcs_bucket_name');
+    $projectId = $config->get('gcs_project_id');
+    $keyfileId = $config->get('gcs_keyfile');
+    $pubsubMessage = $config->get('pubsub_message');
+    $pubsubTopic = $config->get('pubsub_topic');
+    $gcs_client = \Drupal::service('gcs_large_file_upload.gcs_client');
+    $pubsub_client = \Drupal::service('gcs_large_file_upload.pubsub_client');
+    $logger = \Drupal::service('logger.channel.default');
+    $file_stream = fopen($file->getFileUri(), 'rb');
+    $file_name = $file->getFilename();
+
+    try {
+      // Upload the file to Google Cloud Storage.
+      $object_url = $gcs_client->uploadFile($file_stream, $file_name);
+      \Drupal::messenger()->addMessage(t('File uploaded successfully: @url', ['@url' => $object_url]));
+
+      // Publish a message to Pub/Sub if configured.
+      if (!empty($pubsubMessage) && !empty($pubsubTopic)) {
+        $pubsub_client->publishMessage($pubsubTopic, $pubsubMessage . ': ' . $object_url);
+      }
+    } catch (\Exception $e) {
+      // Log and display an error message if the upload fails.
+      $logger->error('Error uploading file: @message', ['@message' => $e->getMessage()]);
+      \Drupal::messenger()->addError(t('Error uploading file: @message', ['@message' => $e->getMessage()]));
+    }
+  } else {
+    // Use the default Drupal file upload mechanism if the file size is within the limit.
+    \Drupal::messenger()->addMessage(t('File uploaded using default Drupal mechanism.'));
+  }
+}
