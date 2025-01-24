@@ -1,0 +1,7 @@
+gcs_large_file_upload.settings:
+  path: '/admin/config/gcs-large-file-upload'
+  defaults:
+    _form: '\Drupal\gcs_large_file_upload\Form\GCSUploadSettingsForm'
+    _title: 'GCS Large File Upload Settings'
+  requirements:
+    _permission: 'administer site configuration'
