@@ -83,6 +83,10 @@ function gcs_file_upload_file_insert(FileInterface $file) {
       $object_url = $gcs_client->uploadFile($file_stream, $file_name);
       \Drupal::messenger()->addMessage(t('File uploaded successfully: @url', ['@url' => $object_url]));
 
+      // Store the GCS file URL in a custom field on the file entity.
+      $file->set('field_gcs_file_url', $object_url);
+      $file->save();
+
       // Publish a message to Pub/Sub if configured.
       if (!empty($pubsubMessage) && !empty($pubsubTopic)) {
         $pubsub_client->publishMessage($pubsubTopic, $pubsubMessage . ': ' . $object_url);
