@@ -5,6 +5,7 @@ namespace Drupal\Tests\gcs_large_file_upload\Unit;
 use Drupal\gcs_large_file_upload\Service\PubSubClient;
 use Google\Cloud\PubSub\PubSubClient as GooglePubSubClient;
 use PHPUnit\Framework\TestCase;
+use Psr\Log\LoggerInterface;
 
 /**
  * @coversDefaultClass \Drupal\gcs_large_file_upload\Service\PubSubClient
@@ -22,11 +23,12 @@ class PubSubClientTest extends TestCase {
 
     $googlePubSubClientMock = $this->createMock(GooglePubSubClient::class);
     $topicMock = $this->createMock(GooglePubSubClient::class);
+    $loggerMock = $this->createMock(LoggerInterface::class);
 
     $googlePubSubClientMock->method('topic')->willReturn($topicMock);
     $topicMock->method('publish')->willReturn(true);
 
-    $pubSubClient = new PubSubClient($projectId, $keyFilePath);
+    $pubSubClient = new PubSubClient($projectId, $keyFilePath, $loggerMock);
     $pubSubClient->pubSubClient = $googlePubSubClientMock;
 
     $pubSubClient->publishMessage($topicName, $message);
