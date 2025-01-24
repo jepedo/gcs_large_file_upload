@@ -7,8 +7,10 @@
 
 use Drupal\Core\Routing\RouteMatchInterface;
 use Drupal\file\Entity\FileInterface;
-use Psr\Log\LoggerInterface;
 use Symfony\Component\DependencyInjection\ContainerInterface;
+use Drupal\gcs_large_file_upload\Service\GCSClient;
+use Drupal\gcs_large_file_upload\Service\PubSubClient;
+use Psr\Log\LoggerInterface;
 
 /**
  * Implements hook_help().
@@ -55,20 +57,24 @@ function gcs_file_upload_form($form, &$form_state) {
  *   The file entity.
  */
 function gcs_file_upload_file_insert(FileInterface $file) {
-  $config = \Drupal::config('gcs_large_file_upload.settings');
+  // Use dependency injection to get the necessary services.
+  /** @var ContainerInterface $container */
+  $container = \Drupal::getContainer();
+  $config = $container->get('config.factory')->get('gcs_large_file_upload.settings');
+  /** @var GCSClient $gcs_client */
+  $gcs_client = $container->get('gcs_large_file_upload.gcs_client');
+  /** @var PubSubClient $pubsub_client */
+  $pubsub_client = $container->get('gcs_large_file_upload.pubsub_client');
+  /** @var LoggerInterface $logger */
+  $logger = $container->get('logger.channel.default');
+
   $size_limit_mb = $config->get('file_size_limit_mb');
   $size_limit_bytes = $size_limit_mb * 1024 * 1024;
 
   // Check if the file size exceeds the configured limit.
   if ($file->getSize() > $size_limit_bytes) {
-    $bucketName = $config->get('gcs_bucket_name');
-    $projectId = $config->get('gcs_project_id');
-    $keyfileId = $config->get('gcs_keyfile');
     $pubsubMessage = $config->get('pubsub_message');
     $pubsubTopic = $config->get('pubsub_topic');
-    $gcs_client = \Drupal::service('gcs_large_file_upload.gcs_client');
-    $pubsub_client = \Drupal::service('gcs_large_file_upload.pubsub_client');
-    $logger = \Drupal::service('logger.channel.default');
     $file_stream = fopen($file->getFileUri(), 'rb');
     $file_name = $file->getFilename();
 
